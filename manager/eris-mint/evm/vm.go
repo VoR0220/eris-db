@@ -91,6 +91,7 @@ func (vm *VM) SetFireable(evc events.Fireable) {
 // prints a log warning and returns false.
 func HasPermission(appState AppState, acc *Account, perm ptypes.PermFlag) bool {
 	v, err := acc.Permissions.Base.Get(perm)
+	log.Warn(Fmt("\n***Can I Hear you EVM!? If so, print perm: %v", v))
 	if _, ok := err.(ptypes.ErrValueNotSet); ok {
 		if appState == nil {
 			log.Warn(Fmt("\n\n***** Unknown permission %b! ********\n\n", perm))

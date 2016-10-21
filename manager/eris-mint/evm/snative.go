@@ -75,12 +75,12 @@ func permissionsContract(appState AppState, caller *Account, args []byte, gas *i
 	if !ok {
 		return nil, fmt.Errorf("unknown permissionsContract funcID %s", funcID)
 	}
-
+	log.Warn("Can hit herez")
 	// check if we have permission to call this function
 	if !HasPermission(appState, caller, d.PermFlag) {
 		return nil, ErrInvalidPermission{caller.Address, d.Name}
 	}
-
+	log.Warn("Haz Permissions")
 	// ensure there are enough arguments
 	if len(args) != d.NArgs*32 {
 		return nil, fmt.Errorf("%s() takes %d arguments", d.Name)
@@ -170,7 +170,9 @@ func has_role(appState AppState, caller *Account, args []byte, gas *int64) (outp
 		return nil, fmt.Errorf("Unknown account %X", addr)
 	}
 	roleS := string(role.Bytes())
+	log.Warn(Fmt("Snative has role for <address:role>: %v:%v", args[:32], roleS))
 	permInt := byteFromBool(vmAcc.Permissions.HasRole(roleS))
+	log.Warn(Fmt("Final verdict(does it have role): %v", permInt))
 	dbg.Printf("snative.hasRole(0x%X, %s) = %v\n", addr.Postfix(20), roleS, permInt > 0)
 	return LeftPadWord256([]byte{permInt}).Bytes(), nil
 }
@@ -182,6 +184,7 @@ func add_role(appState AppState, caller *Account, args []byte, gas *int64) (outp
 		return nil, fmt.Errorf("Unknown account %X", addr)
 	}
 	roleS := string(role.Bytes())
+	log.Warn(Fmt("Snative adding role: %v", roleS))
 	permInt := byteFromBool(vmAcc.Permissions.AddRole(roleS))
 	appState.UpdateAccount(vmAcc)
 	dbg.Printf("snative.addRole(0x%X, %s) = %v\n", addr.Postfix(20), roleS, permInt > 0)

@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/tendermint/go-wire"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 //---------------------------------------------------------------------------------------------------
@@ -88,7 +89,8 @@ type AddRoleArgs struct {
 	Role    string `json:"role"`
 }
 
-func (*AddRoleArgs) PermFlag() PermFlag {
+func (v *AddRoleArgs) PermFlag() PermFlag {
+	log.Debug("Hits Role: ", v.Role)
 	return AddRole
 }
 

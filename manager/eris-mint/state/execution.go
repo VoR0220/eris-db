@@ -9,7 +9,7 @@ import (
 	"github.com/tendermint/go-events"
 
 	acm "github.com/eris-ltd/eris-db/account"
-	"github.com/eris-ltd/eris-db/manager/eris-mint/evm"
+	vm "github.com/eris-ltd/eris-db/manager/eris-mint/evm"
 	ptypes "github.com/eris-ltd/eris-db/permission/types" // for GlobalPermissionAddress ...
 
 	core_types "github.com/eris-ltd/eris-db/core/types"
@@ -852,7 +852,7 @@ func ExecTx(blockCache *BlockCache, tx txs.Tx, runCall bool, evc events.Fireable
 
 		value := tx.Input.Amount
 
-		log.Debug("New PermissionsTx", "function", ptypes.PermFlagToString(permFlag), "args", tx.PermArgs)
+		log.Info(Fmt("New PermissionsTx: Function: %X, Args: %X", ptypes.PermFlagToString(permFlag), tx.PermArgs))
 
 		var permAcc *acm.Account
 		switch args := tx.PermArgs.(type) {
@@ -883,6 +883,8 @@ func ExecTx(blockCache *BlockCache, tx txs.Tx, runCall bool, evc events.Fireable
 			if !permAcc.Permissions.AddRole(args.Role) {
 				return fmt.Errorf("Role (%s) already exists for account %X", args.Role, args.Address)
 			}
+
+			log.Info(Fmt("Hit Add Role and Current <address:roles> are: %v:%v", permAcc.Address, permAcc.Permissions.Roles))
 		case *ptypes.RmRoleArgs:
 			if permAcc = blockCache.GetAccount(args.Address); permAcc == nil {
 				return fmt.Errorf("Trying to update roles for unknown account %X", args.Address)
@@ -945,6 +947,7 @@ func HasPermission(state AccountGetter, acc *acm.Account, perm ptypes.PermFlag) 
 		return HasPermission(nil, state.GetAccount(ptypes.GlobalPermissionsAddress), perm)
 	} else if v {
 		log.Info("Account has permission", "address", Fmt("%X", acc.Address), "perm", permString)
+		log.Info("V Roles: ", "roles", Fmt("%X", acc.Permissions.Roles))
 	} else {
 		log.Info("Account does not have permission", "address", Fmt("%X", acc.Address), "perm", permString)
 	}
