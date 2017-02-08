@@ -15,18 +15,19 @@ import (
 )
 
 var (
-	ErrUnknownAddress      = errors.New("Unknown address")
-	ErrInsufficientBalance = errors.New("Insufficient balance")
-	ErrInvalidJumpDest     = errors.New("Invalid jump dest")
-	ErrInsufficientGas     = errors.New("Insufficient gas")
-	ErrMemoryOutOfBounds   = errors.New("Memory out of bounds")
-	ErrCodeOutOfBounds     = errors.New("Code out of bounds")
-	ErrInputOutOfBounds    = errors.New("Input out of bounds")
-	ErrCallStackOverflow   = errors.New("Call stack overflow")
-	ErrCallStackUnderflow  = errors.New("Call stack underflow")
-	ErrDataStackOverflow   = errors.New("Data stack overflow")
-	ErrDataStackUnderflow  = errors.New("Data stack underflow")
-	ErrInvalidContract     = errors.New("Invalid contract")
+	ErrUnknownAddress         = errors.New("Unknown address")
+	ErrInsufficientBalance    = errors.New("Insufficient balance")
+	ErrInvalidJumpDest        = errors.New("Invalid jump dest")
+	ErrInsufficientGas        = errors.New("Insufficient gas")
+	ErrMemoryOutOfBounds      = errors.New("Memory out of bounds")
+	ErrCodeOutOfBounds        = errors.New("Code out of bounds")
+	ErrInputOutOfBounds       = errors.New("Input out of bounds")
+	ErrCallStackOverflow      = errors.New("Call stack overflow")
+	ErrCallStackUnderflow     = errors.New("Call stack underflow")
+	ErrDataStackOverflow      = errors.New("Data stack overflow")
+	ErrDataStackUnderflow     = errors.New("Data stack underflow")
+	ErrInvalidContract        = errors.New("Invalid contract")
+	ErrNativeContractCodeCopy = errors.New("Tried to copy native contract code")
 )
 
 type ErrPermission struct {
@@ -568,8 +569,8 @@ func (vm *VM) call(caller, callee *Account, code, input []byte, value int64, gas
 				if _, ok := registeredNativeContracts[addr]; !ok {
 					return nil, firstErr(err, ErrUnknownAddress)
 				}
-				stack.Push64(int64(One256))
-				dbg.Printf(" => Hit native contract\n\n")
+				dbg.Printf(" => returning code size of 1 to indicated existence of native contract at %X\n", addr)
+				stack.Push(One256)
 			} else {
 				code := acc.Code
 				l := int64(len(code))
@@ -583,6 +584,10 @@ func (vm *VM) call(caller, callee *Account, code, input []byte, value int64, gas
 			}
 			acc := vm.appState.GetAccount(addr)
 			if acc == nil {
+				if _, ok := registeredNativeContracts[addr]; ok {
+					dbg.Printf(" => attempted to copy native contract at %X but this is not supported\n", addr)
+					return nil, firstErr(err, ErrNativeContractCodeCopy)
+				}
 				return nil, firstErr(err, ErrUnknownAddress)
 			}
 			code := acc.Code
